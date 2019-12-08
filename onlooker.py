@@ -50,9 +50,17 @@ def spotter(pkt):
         l["dhcp_request"] = pkt[Ether].src + " requesting " + i[1]
         continue
 
-  # OS - "UDP/TCP User-Agent"
-  if Raw in pkt:
-    m = re.search(rb'[uU][sS][eE][rR]-[aA][gG][eE][nN][tT]: (.*?)\r\n', pkt[Raw].load)
+  # OS - "UPNP USER-AGENT"
+  if UDP in pkt and Raw in pkt:
+    m = re.search(rb'USER-AGENT: (.*?)\r\n', pkt[Raw].load)
+    try:
+      s["upnp_user_agents"] = [m.group(1).decode()]
+    except:
+      pass
+
+  # OS - "HTTP User-Agent"
+  if TCP in pkt and Raw in pkt:
+    m = re.search(rb'[Uu][Ss][Ee][Rr]-[Aa][Gg][Ee][Nn][Tt]: (.*?)\r\n', pkt[Raw].load)
     try:
       s["user_agents"] = [m.group(1).decode()]
     except:
