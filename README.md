@@ -10,7 +10,7 @@ passive os detection using Fingerbank API
 requires a Fingerbank api key (https://fingerbank.org/usage/#/usage) 
 
 ```
-root@kali:/opt/onlooker# python onlooker.py 
+root@kali:/opt/onlooker# python3 onlooker.py 
 onlooker v0.1 - passive OS detection using Fingerbank API.
  * listening..
 
