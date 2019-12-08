@@ -26,16 +26,24 @@ def spotter(pkt):
   l = {}
 
   # OS - "DHCP Discover - DHCP options"
-  if DHCP in pkt and pkt[DHCP].options[0][1] == 1 and type(pkt[DHCP].options[2][1]) == list:
-    s["dhcp_fingerprint"] = ((str(pkt[DHCP].options[2][1]).replace("[", "")).replace("]", "")).replace(", ", ",")
-    l["dhcp_request"] = pkt[Ether].src + " requesting ip"
-    l["dhcp_hostname"] = pkt[DHCP].options[1][1]
+  if DHCP in pkt and pkt[DHCP].options[0][1] == 1:
+    for i in pkt[DHCP].options:
+      if i[0] == "param_req_list":
+        s["dhcp_fingerprint"] = ((str(i[1]).replace("[", "")).replace("]", "")).replace(", ", ",")
+      if i[0] == "vendor_class_id":
+        s["dhcp_vendor"] = i[1].decode()
+
+    l["dhcp_request"] = pkt[Ether].src + " requesting a new ip"
 
   # OS - "DHCP Request - DHCP options"
-  if DHCP in pkt and pkt[DHCP].options[0][1] == 3 and type(pkt[DHCP].options[3][1]) == list:
-    s["dhcp_fingerprint"] = ((str(pkt[DHCP].options[3][1]).replace("[", "")).replace("]", "")).replace(", ", ",")
-    l["dhcp_request"] = pkt[Ether].src + " requesting " + pkt[DHCP].options[2][1]
-    l["dhcp_hostname"] = pkt[DHCP].options[1][1]
+  if DHCP in pkt and pkt[DHCP].options[0][1] == 3:
+    for i in pkt[DHCP].options:
+      if i[0] == "param_req_list":
+        s["dhcp_fingerprint"] = ((str(i[1]).replace("[", "")).replace("]", "")).replace(", ", ",")
+      if i[0] == "vendor_class_id":
+        s["dhcp_vendor"] = i[1].decode()
+      if i[0] == "requested_addr":
+        l["dhcp_request"] = pkt[Ether].src + " requesting " + i[1]
 
   # OS - "UDP/TCP User-Agent"
   if Raw in pkt:
@@ -53,6 +61,8 @@ def spotter(pkt):
   if TCP in pkt:
     l["tcp_src_dst"] = str(pkt[TCP].sport) + " -> " + str(pkt[TCP].dport)
     l["tcp_window_size"] = pkt[TCP].window
+
+  # TCP SYN Flags in p0f format
 
   # IP
   if IP in pkt:
@@ -78,4 +88,4 @@ if __name__ == "__main__":
   print ("onlooker v0.1 - passive OS detection using Fingerbank API.")
   print (" * listening..")
   # update src ip!
-  sniff(filter="(udp) or (tcp and not src host 192.168.1.100)", prn=spotter)
+  sniff(iface="wlan0", filter="(udp) or (tcp and not src host 192.168.1.99)", prn=spotter)
