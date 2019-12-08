@@ -6,6 +6,9 @@ passive os detection using Fingerbank API
 - https://scapy.net/
 
 **Usage**
+
+requires a Fingerbank api key (https://fingerbank.org/usage/#/usage) 
+
 ```
 root@kali:/opt/onlooker# python onlooker.py 
 onlooker v0.1 - passive OS detection using Fingerbank API.
