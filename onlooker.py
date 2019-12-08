@@ -30,8 +30,10 @@ def spotter(pkt):
     for i in pkt[DHCP].options:
       if i[0] == "param_req_list":
         s["dhcp_fingerprint"] = ((str(i[1]).replace("[", "")).replace("]", "")).replace(", ", ",")
+        continue
       if i[0] == "vendor_class_id":
         s["dhcp_vendor"] = i[1].decode()
+        continue
 
     l["dhcp_request"] = pkt[Ether].src + " requesting a new ip"
 
@@ -40,10 +42,13 @@ def spotter(pkt):
     for i in pkt[DHCP].options:
       if i[0] == "param_req_list":
         s["dhcp_fingerprint"] = ((str(i[1]).replace("[", "")).replace("]", "")).replace(", ", ",")
+        continue
       if i[0] == "vendor_class_id":
         s["dhcp_vendor"] = i[1].decode()
+        continue
       if i[0] == "requested_addr":
         l["dhcp_request"] = pkt[Ether].src + " requesting " + i[1]
+        continue
 
   # OS - "UDP/TCP User-Agent"
   if Raw in pkt:
