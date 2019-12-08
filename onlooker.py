@@ -1,25 +1,25 @@
 from scapy.all import *
-import httplib
+import http.client
 import json
 
 load_module("p0f")
 
-#fingerbank api key
+# update api key!
 API = "aBaBaBaBaBaBaBaBaBaBaBaBaBaBaBaBaBaBaBaB"
 
 def fingerbankAPI(sig):
   url = "/api/v2/combinations/interrogate?key=" + API
-  c = httplib.HTTPSConnection("api.fingerbank.org")
+  c = http.client.HTTPSConnection("api.fingerbank.org")
   param = json.dumps(sig)
-  print "Querying api.fingerbank.org.."
-  print " * OS signature: " + str(param)
+  print ("Querying api.fingerbank.org..")
+  print (" * OS signature: " + str(param))
   header = {"Content-type": "application/json"}
   c.request("POST", url, param, header)
   r = c.getresponse()
-  print r.status, r.reason
+  print (r.status, r.reason)
   data = json.loads(r.read())
   c.close()
-  print json.dumps(data, indent=2, sort_keys=False)
+  print (json.dumps(data, indent=2, sort_keys=False))
 
 def spotter(pkt):
   s = {}
@@ -39,9 +39,9 @@ def spotter(pkt):
 
   # OS - "UDP/TCP User-Agent"
   if Raw in pkt:
-    m = re.search(r'[uU][sS][eE][rR]-[aA][gG][eE][nN][tT]: (.*?)\r\n', pkt[Raw].load)
+    m = re.search(rb'[uU][sS][eE][rR]-[aA][gG][eE][nN][tT]: (.*?)\r\n', pkt[Raw].load)
     try:
-      s["user_agents"] = [m.group(1)]
+      s["user_agents"] = [m.group(1).decode()]
     except:
       pass
 
@@ -59,23 +59,23 @@ def spotter(pkt):
     l["ip_src_dst"] = pkt[IP].src + " -> " + pkt[IP].dst
     l["ip_ttl"] = pkt[IP].ttl
 
-  # MAC
+  # OS - "MAC"
   if Ether in pkt:
     s["mac"] = str(pkt[Ether].src).replace(":", "")
     l["mac_src_dst"] = pkt[Ether].src + " -> " + pkt[Ether].dst
     l["p0f"] = prnp0f(pkt)
 
   if len(l) > 1 and (l["p0f"] != None or len(s) > 1):
-    print ""
-    print "Host detected.."
+    print ("\nHost detected..")
     for i in l:
-      print " * " + str(i) + " | " + str(l[i])
-    print ""
+      print (" * " + str(i) + " | " + str(l[i]))
+    print ("")
 
   if len(s) > 1:
     fingerbankAPI(s)
 
 if __name__ == "__main__":
-  print "onlooker v0.1 - passive OS detection using Fingerbank API."
-  print " * listening.."
+  print ("onlooker v0.1 - passive OS detection using Fingerbank API.")
+  print (" * listening..")
+  # update src ip!
   sniff(filter="(udp) or (tcp and not src host 192.168.1.100)", prn=spotter)
